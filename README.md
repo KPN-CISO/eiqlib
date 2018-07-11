@@ -29,13 +29,13 @@ indicator.add_indicator_type(indicator.INDICATOR_C2)
 indicator.add_indicator_type(indicator.INDICATOR_HOST_CHARACTERISTICS)
 
 # Adding observables
-indicator.add_observable(sighting.OBSERVABLE_IPV4, '127.0.0.1')
-indicator.add_observable(sighting.OBSERVABLE_DOMAIN, 'www.example.org')
-indicator.add_observable(sighting.OBSERVABLE_URI, 'https://www.example.org/test.php')
-indicator.add_observable(sighting.OBSERVABLE_EMAIL, 'postmaster@example.org')
+indicator.add_observable(indicator.OBSERVABLE_IPV4, '127.0.0.1')
+indicator.add_observable(indicator.OBSERVABLE_DOMAIN, 'www.example.org')
+indicator.add_observable(indicator.OBSERVABLE_URI, 'https://www.example.org/test.php')
+indicator.add_observable(indicator.OBSERVABLE_EMAIL, 'postmaster@example.org')
 
 with open('EntityTitle.json', 'w') as f:
-  f.write(sighting.get_as_json())
+  f.write(indicator.get_as_json())
 ```
 
 ### example usage of eiqjson.EIQRelation
