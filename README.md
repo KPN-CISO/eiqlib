@@ -2,11 +2,13 @@
 a python3 library for interacting with EclecticIQ
 
 ## eiqjson
-a simple python3 library for generating EIQ API json bodies
+a simple python3 library for generating EIQ API json bodies.
+only compatible with EclecticIQ 2.2
 
 ### dependencies
 - python3
 - standard python3 libraries (json, time, uuid, urllib.request)
+- EclecticIQ 2.2 (as server for the API to communicate with)
 
 ### example usage of eiqjson.EIQEntity
 

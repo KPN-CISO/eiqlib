@@ -233,8 +233,10 @@ class EIQEntity:
 
     # meta structure: what is around this entity
     # source, source_reliability, estimated_observed_time, tags, taxonomy, manual_extracts, tlp_color, made_with_builder
+    entity['sources'] = []
+    if source != '':
+      entity['sources'].append( { 'source_id': source } )
     entity['meta'] = {}
-    entity['meta']['source'] = source
     entity['meta']['source_reliability'] = source_reliability
     entity['meta']['estimated_observed_time'] = observed_time
     entity['meta']['tags'] = []
@@ -277,7 +279,7 @@ class EIQEntity:
   def set_entity_source(self, source, source_reliability = 'A'):
     if not self.__is_entity_set:
       raise Exception('You need to set an entity first using set_entity(...)')
-    self.__doc['data']['meta']['source'] = source
+    self.__doc['data']['sources'].append( { 'source_id': source } )
     self.__doc['data']['meta']['source_reliability'] = source_reliability
 
   def set_entity_title(self, title):
@@ -538,7 +540,8 @@ class EIQRelation:
 
     self.__doc['data']['meta'] = {}
     if ingest_source:
-      self.__doc['data']['meta']['source'] = ingest_source
+      self.__doc['data']['sources'] = []
+      self.__doc['data']['sources'].append( {'source_id': ingest_source} )
     self.__doc['data']['data'] = relation
 
   def set_source(self, source_id, source_type):
@@ -560,7 +563,8 @@ class EIQRelation:
   def set_ingest_source(self, source):
     if not self.__is_relation_set:
       raise Exception('You need to set a relation subtype first using set_relation(...)')
-    self.__doc['data']['meta']['source'] = source
+    self.__doc['data']['sources'] = []
+    self.__doc['data']['sources'].append( { 'source_id': source } )
 
   def get_as_dict(self):
     return self.__doc
