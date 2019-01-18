@@ -348,6 +348,11 @@ class EIQEntity:
     self.__doc['data']['data']['handling'][0]['marking_structures'][0]['color'] = tlp.upper()
     self.__doc['data']['data']['handling'][0]['marking_structures'][0]['type'] = 'marking-structure'
 
+  def set_entity_external_url(self, external_url):
+    if not self.__is_entity_set:
+      raise Exception('You need to set an entity first using set_entity(...)')
+    self.__doc['data']['external_url'] = external_url
+
   def add_indicator_type(self, indicator_type):
     if not self.__is_entity_set:
       raise Exception('You need to set an entity first using set_entity(...)')
