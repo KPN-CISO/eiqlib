@@ -235,9 +235,10 @@ class EIQEntity:
         entity['data']['description'] = entity_description
         entity['data']['description_structuring_format'] = 'html'
         entity['data']['types'] = []
-        entity['data']['information_source'] = {}
-        entity['data']['information_source']['type'] = 'information_source'
-        entity['data']['information_source']['references'] = []
+        entity['data']['information-source'] = {}
+        entity['data']['information-source']['type'] = 'information-source'
+        entity['data']['information-source']['references'] = []
+        entity['data']['intents'] = []
         # has to set: types, confidence, impact, tlp
 
         # meta structure: what is around this entity
@@ -322,12 +323,17 @@ class EIQEntity:
     def set_entity_source_description(self, description):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        self.__doc['data']['data']['information_source']['description'] = description
+        self.__doc['data']['data']['information-source']['description'] = description
+
+    def set_entity_intent(self, intent):
+        if not self.__is_entity_set:
+            raise Exception('You need to set an entity first using set_entity(...)')
+        self.__doc['data']['data']['intents'].append(intent)
 
     def set_entity_source_reference(self, reference):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        self.__doc['data']['data']['information_source']['references'].append(reference)
+        self.__doc['data']['data']['information-source']['references'].append(reference)
 
     def set_entity_reliability(self, reliability):
         if not self.__is_entity_set:
