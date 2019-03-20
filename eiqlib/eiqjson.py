@@ -217,6 +217,24 @@ class EIQEntity:
       CONFIDENCE_HIGH
       ]
 
+    CATEGORY_TEST = 'Exercise/Network Defense Testing'
+    CATEGORY_UNAUTHORIZED_ACCESS = 'Unauthorized Access'
+    CATEGORY_DOS = 'Denial of Service'
+    CATEGORY_MALICIOUS_CODE = 'Malicious Code'
+    CATEGORY_IMPROPER_USAGE = 'Improper Usage'
+    CATEGORY_SCANS = 'Scans/Probes/Attempted Access'
+    CATEGORY_INVESTIGATION = 'Investigation'
+
+    CATEGORY_TYPES = [
+        CATEGORY_TEST,
+        CATEGORY_UNAUTHORIZED_ACCESS,
+        CATEGORY_DOS,
+        CATEGORY_MALICIOUS_CODE,
+        CATEGORY_IMPROPER_USAGE,
+        CATEGORY_SCANS,
+        CATEGORY_INVESTIGATION
+    ]
+
     def __init__(self):
       self.__is_entity_set = False
       self.__doc = {}
@@ -368,11 +386,24 @@ class EIQEntity:
         raise Exception('%s is not a member of INDICATOR_TYPES' % (indicator_type,))
       if not 'types' in self.__doc['data']['data'].keys():
         self.__doc['data']['data']['types'] = []
-
+      
       # only add unique values
       indicator_type_object = { 'value': indicator_type }
       if not indicator_type_object in self.__doc['data']['data']['types']:
         self.__doc['data']['data']['types'].append({'value': indicator_type})
+
+    def add_category_type(self, category_type):
+      if not self.__is_entity_set:
+        raise Exception('You need to set an entity first using set_entity(...)')
+      if not category_type in self.CATEGORY_TYPES:
+        raise Exception('%s is not a member of INDICATOR_TYPES' % (category_type,))
+      if not 'categories' in self.__doc['data']['data'].keys():
+        self.__doc['data']['data']['categories'] = []
+
+      # only add unique values
+      category_type_object = { 'value': category_type }
+      if not category_type_object in self.__doc['data']['data']['categories']:
+        self.__doc['data']['data']['categories'].append({'value': category_type})
 
     def add_actor_type(self, actor_type):
       if not self.__is_entity_set:
