@@ -451,7 +451,7 @@ class EIQEntity:
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
         if not category_type in self.CATEGORY_TYPES:
-            raise Exception('%s is not a member of INDICATOR_TYPES' % (category_type,))
+            raise Exception('%s is not a member of CATEGORY_TYPES' % (category_type,))
         if not 'categories' in self.__doc['data']['data'].keys():
             self.__doc['data']['data']['categories'] = []
 
