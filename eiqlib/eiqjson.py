@@ -19,6 +19,7 @@ Example usage:
     f.write(obj.get_as_json())
 """
 class EIQEntity:
+    EIQ_HALF_LIFE = 182 # EIQ default of half a year
     ENTITY_ACTOR = 'threat-actor'
     ENTITY_CAMPAIGN = 'campaign'
     ENTITY_COA = 'course-of-action'
@@ -311,7 +312,7 @@ class EIQEntity:
         entity['meta']['taxonomy'] = []
         entity['meta']['manual_extracts'] = []
         entity['meta']['made_with_builder'] = '1.10_1' # ugly hack, perhaps necessary, perhaps not
-        entity['meta']['half_life'] = 182 # EIQ default of half a year
+        entity['meta']['half_life'] = self.EIQ_HALF_LIFE
 
         # intel_sets: unknown, empty list
         entity['intel_sets'] = []
