@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-
-import json, time, uuid, sys
-
 """EIQJson
 A simple EIQ json generator
 
@@ -18,8 +14,14 @@ Example usage:
   with open('EntityTitle.json', 'w') as f:
     f.write(obj.get_as_json())
 """
+
+import json
+import sys
+import time
+
+
 class EIQEntity:
-    EIQ_HALF_LIFE = 182 # EIQ default of half a year
+    EIQ_HALF_LIFE = 182  # EIQ default of half a year
     ENTITY_ACTOR = 'threat-actor'
     ENTITY_CAMPAIGN = 'campaign'
     ENTITY_COA = 'course-of-action'
@@ -31,15 +33,15 @@ class EIQEntity:
     ENTITY_TTP = 'ttp'
 
     ENTITY_TYPES = [
-      ENTITY_ACTOR,
-      ENTITY_CAMPAIGN,
-      ENTITY_COA,
-      ENTITY_INCIDENT,
-      ENTITY_INDICATOR,
-      ENTITY_REPORT,
-      ENTITY_SIGHTING,
-      ENTITY_TARGET,
-      ENTITY_TTP
+        ENTITY_ACTOR,
+        ENTITY_CAMPAIGN,
+        ENTITY_COA,
+        ENTITY_INCIDENT,
+        ENTITY_INDICATOR,
+        ENTITY_REPORT,
+        ENTITY_SIGHTING,
+        ENTITY_TARGET,
+        ENTITY_TTP
     ]
 
     ACTOR_TYPE_CYBER_ESPIONAGE = "Cyber Espionage Operation's"
@@ -79,6 +81,7 @@ class EIQEntity:
     OBSERVABLE_URI = 'uri'
     OBSERVABLE_DOMAIN = 'domain'
     OBSERVABLE_EMAIL = 'email'
+    OBSERVABLE_EMAIL_SUBJECT = 'email-subject'
 
     OBSERVABLE_ORGANIZATION = 'organization'
     OBSERVABLE_MD5 = 'hash-md5'
@@ -86,9 +89,6 @@ class EIQEntity:
     OBSERVABLE_SHA256 = 'hash-sha256'
     OBSERVABLE_SHA512 = 'hash-sha512'
     OBSERVABLE_FILE = 'file'
-    OBSERVABLE_DOMAIN = 'domain'
-    OBSERVABLE_EMAIL = 'email'
-    OBSERVABLE_EMAIL_SUBJECT = 'email-subject'
     OBSERVABLE_MUTEX = 'mutex'
     OBSERVABLE_TELEPHONE = 'telephone'
     OBSERVABLE_NATIONALITY = 'nationality'
@@ -278,40 +278,43 @@ class EIQEntity:
         self.__is_entity_set = False
         self.__doc = {}
 
-    def set_entity(self, entity_type, entity_title='', entity_description='', observed_time='', source='', source_reliability='A', tlp='RED', confidence='Unknown', impact='Unknown'):
-        if not entity_type in self.ENTITY_TYPES:
+    def set_entity(self, entity_type, entity_title='', entity_description='', observed_time='', source='',
+                   source_reliability='A', tlp='RED', confidence='Unknown', impact='Unknown'):
+        if entity_type not in self.ENTITY_TYPES:
             raise Exception('Expecting entity_type from ENTITY_TYPES')
 
         self.__is_entity_set = True
 
         entity = {}
 
-        # data structure: this entity
-        # contains: type, confidence, likely_impact, types, title, description, description_structuring_format & handling
+        # data structure: this entity contains: type, confidence, likely_impact, types, title, description,
+        # description_structuring_format & handling
         entity['data'] = {}
         entity['data']['type'] = entity_type
         entity['data']['title'] = entity_title
         entity['data']['description'] = entity_description
         entity['data']['description_structuring_format'] = 'html'
         entity['data']['types'] = []
-        entity['data']['information-source'] = {}
-        entity['data']['information-source']['type'] = 'information-source'
-        entity['data']['information-source']['references'] = []
+        entity['data']['information-source'] = {
+            'type': 'information-source',
+            'references': [],
+        }
         entity['data']['intents'] = []
         # has to set: types, confidence, impact, tlp
 
         # meta structure: what is around this entity
-        # source, source_reliability, estimated_observed_time, tags, taxonomy, manual_extracts, tlp_color, made_with_builder
+        # source, source_reliability, estimated_observed_time, tags, taxonomy, manual_extracts, tlp_color,
+        # made_with_builder
         entity['sources'] = []
         if source != '':
-            entity['sources'].append({'source_id': source })
+            entity['sources'].append({'source_id': source})
         entity['meta'] = {}
         entity['meta']['source_reliability'] = source_reliability
         entity['meta']['estimated_observed_time'] = observed_time
         entity['meta']['tags'] = []
         entity['meta']['taxonomy'] = []
         entity['meta']['manual_extracts'] = []
-        entity['meta']['made_with_builder'] = '1.10_1' # ugly hack, perhaps necessary, perhaps not
+        entity['meta']['made_with_builder'] = '1.10_1'  # ugly hack, perhaps necessary, perhaps not
         entity['meta']['half_life'] = self.EIQ_HALF_LIFE
 
         # intel_sets: unknown, empty list
@@ -345,10 +348,10 @@ class EIQEntity:
             raise Exception('You need to set an entity first using set_entity(...)')
         self.__doc['data']['id'] = id_string
 
-    def set_entity_source(self, source, source_reliability = 'A'):
+    def set_entity_source(self, source, source_reliability='A'):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        self.__doc['data']['sources'].append( { 'source_id': source } )
+        self.__doc['data']['sources'].append({'source_id': source})
         self.__doc['data']['meta']['source_reliability'] = source_reliability
 
     def set_entity_title(self, title):
@@ -372,11 +375,6 @@ class EIQEntity:
             raise Exception('You need to set an entity first using set_entity(...)')
         self.__doc['data']['meta']['estimated_observed_time'] = observed_time
 
-    def set_entity_external_url(self, external_url):
-        if not self.__is_entity_set:
-            raise Exception('You need to set an entity first using set_entity(...)')
-        self.__doc['data']['external_url'] = external_url
-
     def set_entity_source_description(self, description):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
@@ -397,17 +395,18 @@ class EIQEntity:
             raise Exception('You need to set an entity first using set_entity(...)')
         self.__doc['data']['meta']['source_reliability'] = reliability
 
-    def set_entity_confidence(self, confidence = 'Unknown'):
+    def set_entity_confidence(self, confidence='Unknown'):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
         self.__doc['data']['data']['confidence'] = {}
         self.__doc['data']['data']['confidence']['type'] = 'confidence'
         self.__doc['data']['data']['confidence']['value'] = confidence
 
-    def set_entity_impact(self, impact = 'Unknown'):
+    def set_entity_impact(self, impact='Unknown'):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        # at least sightings and incidators both have an impact setting, but both address it by a different name (but with an identical structure)
+        # at least sightings and incidators both have an impact setting, but both address it by a different name
+        # (but with an identical structure)
         if self.__doc['data']['data']['type'] == self.ENTITY_SIGHTING:
             impact_key = 'impact'
         elif self.__doc['data']['data']['type'] == self.ENTITY_INDICATOR:
@@ -416,7 +415,8 @@ class EIQEntity:
             raise Exception('impact is not defined for this entity type')
         self.__doc['data']['data'][impact_key] = {}
         self.__doc['data']['data'][impact_key]['type'] = 'statement'
-        self.__doc['data']['data'][impact_key]['value_vocab'] = '{http://stix.mitre.org/default_vocabularies-1}HighMediumLowVocab-1.0'
+        self.__doc['data']['data'][impact_key][
+            'value_vocab'] = '{http://stix.mitre.org/default_vocabularies-1}HighMediumLowVocab-1.0'
         self.__doc['data']['data'][impact_key]['value'] = impact
 
     def set_entity_tlp(self, tlp):
@@ -438,86 +438,82 @@ class EIQEntity:
     def add_indicator_type(self, indicator_type):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not indicator_type in self.INDICATOR_TYPES:
+        if indicator_type not in self.INDICATOR_TYPES:
             raise Exception('%s is not a member of INDICATOR_TYPES' % (indicator_type,))
-        if not 'types' in self.__doc['data']['data'].keys():
+        if 'types' not in self.__doc['data']['data']:
             self.__doc['data']['data']['types'] = []
 
         # only add unique values
         indicator_type_object = {'value': indicator_type}
-        if not indicator_type_object in self.__doc['data']['data']['types']:
+        if indicator_type_object not in self.__doc['data']['data']['types']:
             self.__doc['data']['data']['types'].append({'value': indicator_type})
 
     def add_category_type(self, category_type):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not category_type in self.CATEGORY_TYPES:
+        if category_type not in self.CATEGORY_TYPES:
             raise Exception('%s is not a member of CATEGORY_TYPES' % (category_type,))
-        if not 'categories' in self.__doc['data']['data'].keys():
+        if 'categories' not in self.__doc['data']['data']:
             self.__doc['data']['data']['categories'] = []
 
         # only add unique values
-        category_type_object = { 'value': category_type }
-        if not category_type_object in self.__doc['data']['data']['categories']:
+        category_type_object = {'value': category_type}
+        if category_type_object not in self.__doc['data']['data']['categories']:
             self.__doc['data']['data']['categories'].append({'value': category_type})
 
     def add_actor_type(self, actor_type):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not 'types' in self.__doc['data']['data'].keys():
+        if 'types' not in self.__doc['data']['data']:
             self.__doc['data']['data']['types'] = []
         # only add unique values
-        actor_type_object = { 'type': 'statement', 'value': actor_type }
-        if not actor_type_object in self.__doc['data']['data']['types']:
+        actor_type_object = {'type': 'statement', 'value': actor_type}
+        if actor_type_object not in self.__doc['data']['data']['types']:
             self.__doc['data']['data']['types'].append(actor_type_object)
 
     def add_ttp_type(self, ttp_type):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not ttp_type in self.TTP_TYPES:
+        if ttp_type not in self.TTP_TYPES:
             raise Exception('%s is not a member of TTP_TYPES' % (ttp_type,))
-        if not 'intended_effects' in self.__doc['data']['data'].keys():
+        if 'intended_effects' not in self.__doc['data']['data']:
             self.__doc['data']['data']['intended_effects'] = []
 
         # only add unique values
-        ttp_type_object = { 'type': 'statement', 'value': ttp_type }
-        if not ttp_type_object in self.__doc['data']['data']['intended_effects']:
+        ttp_type_object = {'type': 'statement', 'value': ttp_type}
+        if ttp_type_object not in self.__doc['data']['data']['intended_effects']:
             self.__doc['data']['data']['intended_effects'].append(ttp_type_object)
 
     def add_discovery_type(self, discovery):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not discovery in self.DISCOVERY_TYPES:
+        if discovery not in self.DISCOVERY_TYPES:
             raise Exception('%s is not a member of DISCOVERY_TYPES' % (discovery,))
-        if not 'discovery_methods' in self.__doc['data']['data'].keys():
+        if 'discovery_methods' not in self.__doc['data']['data']:
             self.__doc['data']['data']['discovery_methods'] = []
 
         # only add unique values
-        discovery_type_object = { 'value': discovery }
-        if not discovery_type_object in self.__doc['data']['data']['discovery_methods']:
+        discovery_type_object = {'value': discovery}
+        if discovery_type_object not in self.__doc['data']['data']['discovery_methods']:
             self.__doc['data']['data']['discovery_methods'].append(discovery_type_object)
 
-    def add_observable(self, extract_type, value, classification = '', confidence = '', link_type = OBSERVABLE_LINK_OBSERVED):
+    def add_observable(self, extract_type, value, classification='', confidence='', link_type=OBSERVABLE_LINK_OBSERVED):
         #    if not observable_type in self.OBSERVABLE_TYPES:
         #      raise Exception('Expecting observable_type from OBSERVABLE_TYPES')
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not 'manual_extracts' in self.__doc['data']['meta'].keys():
+        if 'manual_extracts' not in self.__doc['data']['meta']:
             self.__doc['data']['meta']['manual_extracts'] = []
-        if not link_type in self.OBSERVABLE_LINK_TYPES:
+        if link_type not in self.OBSERVABLE_LINK_TYPES:
             raise Exception('Observable link type %s is not a valid link type' % (link_type,))
 
-        extract = {}
+        extract = {'value': value, 'kind': extract_type, 'link_type': link_type}
 
-        extract['value'] = value
-        extract['kind'] = extract_type
-        extract['link_type'] = link_type
-
-        if not classification in self.CLASSIFICATION_TYPES:
+        if classification not in self.CLASSIFICATION_TYPES:
             extract['classification'] = self.CLASSIFICATION_UNKNOWN
         else:
             if classification == self.CLASSIFICATION_BAD:
-                if not confidence in self.CONFIDENCE_TYPES:
+                if confidence not in self.CONFIDENCE_TYPES:
                     extract['confidence'] = self.CONFIDENCE_LOW
                 else:
                     extract['confidence'] = confidence
@@ -525,25 +521,21 @@ class EIQEntity:
 
         self.__doc['data']['meta']['manual_extracts'].append(extract)
 
-    def add_sighting(self, extract_type, value, classification = '', confidence = ''):
+    def add_sighting(self, extract_type, value, classification='', confidence=''):
         #    if not extract_type in self.OBSERVABLE_TYPES:
         #      raise Exception('Expecting observable_type from OBSERVABLE_TYPES')
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not 'manual_extracts' in self.__doc['data']['meta'].keys():
+        if 'manual_extracts' not in self.__doc['data']['meta']:
             self.__doc['data']['meta']['manual_extracts'] = []
 
-        extract = {}
+        extract = {'value': value, 'kind': extract_type, 'link_type': 'sighted'}
 
-        extract['value'] = value
-        extract['kind'] = extract_type
-        extract['link_type'] = 'sighted'
-
-        if not classification in self.CLASSIFICATION_TYPES:
+        if classification not in self.CLASSIFICATION_TYPES:
             extract['classification'] = self.CLASSIFICATION_UNKNOWN
         else:
             if classification == self.CLASSIFICATION_BAD:
-                if not confidence in self.CONFIDENCE_TYPES:
+                if confidence not in self.CONFIDENCE_TYPES:
                     extract['confidence'] = self.CONFIDENCE_LOW
                 else:
                     extract['confidence'] = confidence
@@ -551,25 +543,21 @@ class EIQEntity:
 
         self.__doc['data']['meta']['manual_extracts'].append(extract)
 
-    def add_test_mechanism(self, extract_type, value, classification = '', confidence = ''):
+    def add_test_mechanism(self, extract_type, value, classification='', confidence=''):
         #    if not observable_type in self.OBSERVABLE_TYPES:
         #      raise Exception('Expecting observable_type from OBSERVABLE_TYPES')
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if not 'manual_extracts' in self.__doc['data']['meta'].keys():
+        if 'manual_extracts' not in self.__doc['data']['meta']:
             self.__doc['data']['meta']['manual_extracts'] = []
 
-        extract = {}
+        extract = {'value': value, 'kind': extract_type, 'link_type': 'test-mechanism'}
 
-        extract['value'] = value
-        extract['kind'] = extract_type
-        extract['link_type'] = 'test-mechanism'
-
-        if not classification in self.CLASSIFICATION_TYPES:
+        if classification not in self.CLASSIFICATION_TYPES:
             extract['classification'] = self.CLASSIFICATION_UNKNOWN
         else:
             if classification == self.CLASSIFICATION_BAD:
-                if not confidence in self.CONFIDENCE_TYPES:
+                if confidence not in self.CONFIDENCE_TYPES:
                     extract['confidence'] = self.CONFIDENCE_LOW
                 else:
                     extract['confidence'] = confidence
@@ -580,20 +568,25 @@ class EIQEntity:
     def get_as_dict(self):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if self.__doc['data']['data']['type'] == self.ENTITY_INDICATOR and not 'types' in self.__doc['data']['data'].keys():
+        if self.__doc['data']['data']['type'] == self.ENTITY_INDICATOR and \
+                'types' not in self.__doc['data']['data']:
             sys.stderr.write('[!] no indicator type was set using add_indicator_type(indicator_type)\n')
-        if self.__doc['data']['data']['type'] == self.ENTITY_ACTOR and (not 'types' in self.__doc['data']['data'].keys() or len(self.__doc['data']['data']['types']) == 0):
+        if self.__doc['data']['data']['type'] == self.ENTITY_ACTOR and (
+                not 'types' in self.__doc['data']['data'] or len(self.__doc['data']['data']['types']) == 0):
             sys.stderr.write('[!] no actor type was set using add_actor_type(actor_type)\n')
         return self.__doc
 
     def get_as_json(self):
         if not self.__is_entity_set:
             raise Exception('You need to set an entity first using set_entity(...)')
-        if self.__doc['data']['data']['type'] == self.ENTITY_INDICATOR and not 'types' in self.__doc['data']['data'].keys():
+        if self.__doc['data']['data']['type'] == self.ENTITY_INDICATOR and \
+                'types' not in self.__doc['data']['data']:
             sys.stderr.write('[!] no indicator type was set using add_indicator_type(indicator_type)\n')
-        if self.__doc['data']['data']['type'] == self.ENTITY_ACTOR and (not 'types' in self.__doc['data']['data'].keys() or len(self.__doc['data']['data']['types']) == 0):
+        if self.__doc['data']['data']['type'] == self.ENTITY_ACTOR and (
+                not 'types' in self.__doc['data']['data'] or len(self.__doc['data']['data']['types']) == 0):
             sys.stderr.write('[!] no actor type was set using add_actor_type(actor_type)\n')
         return json.dumps(self.__doc)
+
 
 class EIQRelation:
     RELATION_REGULAR = 'REGULAR'
@@ -611,13 +604,14 @@ class EIQRelation:
     LABEL_INDICATES_MALWARE = 'Indicates malware'
     LABEL_UNKNOWN = 'I don\'t know'
     LABEL_ANYTHING = 'Could be anything'
-    
+
     def __init__(self):
         self.__is_relation_set = False
         self.__doc = {}
 
-    def set_relation(self, relation_subtype, source_id = None, source_type = None, target_id = None, target_type = None, ingest_source = None, label = None):
-        if not relation_subtype in self.RELATION_TYPES:
+    def set_relation(self, relation_subtype, source_id=None, source_type=None, target_id=None, target_type=None,
+                     ingest_source=None, label=None):
+        if relation_subtype not in self.RELATION_TYPES:
             raise Exception('Expecting relation_subtype from RELATION_TYPES')
 
         self.__is_relation_set = True
@@ -637,16 +631,16 @@ class EIQRelation:
             else:
                 relation['relationship'] = self.LABEL_UNKNOWN
 
-      # set source
+        # set source
         if source_id and source_type:
-            if not source_type in EIQEntity.ENTITY_TYPES:
+            if source_type not in EIQEntity.ENTITY_TYPES:
                 raise Exception('Expecting source_type from EIQEntity.ENTITY_TYPES')
             relation['source'] = source_id
             relation['source_type'] = source_type
 
-      # set target
+        # set target
         if target_id and target_type:
-            if not target_type in EIQEntity.ENTITY_TYPES:
+            if target_type not in EIQEntity.ENTITY_TYPES:
                 raise Exception('Expecting target_type from EIQEntity.ENTITY_TYPES')
             relation['target'] = target_id
             relation['target_type'] = target_type
@@ -660,15 +654,15 @@ class EIQRelation:
     def set_source(self, source_id, source_type):
         if not self.__is_relation_set:
             raise Exception('You need to set a relation subtype first using set_relation(...)')
-        if not source_type in EIQEntity.ENTITY_TYPES:
+        if source_type not in EIQEntity.ENTITY_TYPES:
             raise Exception('Expecting source_type from EIQEntity.ENTITY_TYPES')
         self.__doc['data']['data']['source'] = source_id
         self.__doc['data']['data']['source_type'] = source_type
-    
+
     def set_target(self, target_id, target_type):
         if not self.__is_relation_set:
             raise Exception('You need to set a relation subtype first using set_relation(...)')
-        if not target_type in EIQEntity.ENTITY_TYPES:
+        if target_type not in EIQEntity.ENTITY_TYPES:
             raise Exception('Expecting target_type from EIQEntity.ENTITY_TYPES')
         self.__doc['data']['data']['target'] = target_id
         self.__doc['data']['data']['target_type'] = target_type
@@ -676,8 +670,7 @@ class EIQRelation:
     def set_ingest_source(self, source):
         if not self.__is_relation_set:
             raise Exception('You need to set a relation subtype first using set_relation(...)')
-        self.__doc['data']['sources'] = []
-        self.__doc['data']['sources'].append({ 'source_id': source })
+        self.__doc['data']['sources'] = [{'source_id': source}]
 
     def get_as_dict(self):
         return self.__doc
@@ -685,8 +678,6 @@ class EIQRelation:
     def get_as_json(self):
         return json.dumps(self.__doc)
 
+
 def timestamp_to_eiq_utc(timestamp):
     return time.strftime('%Y-%m-%dT%H:%M:%S%z', time.gmtime(int(timestamp)))
-
-if __name__ == '__main__':
-    pass
