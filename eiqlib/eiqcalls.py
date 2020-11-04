@@ -1,7 +1,10 @@
-#!/usr/bin/env python3
+import hashlib
+import json
+import ssl
+import urllib.request
 
-import json, urllib.request, ssl, hashlib
 from eiqlib import eiqjson
+
 
 class EIQApi:
     def __init__(self, host=None, username=None, password=None, source=None, use_ssl=True, insecure=False):
@@ -22,27 +25,24 @@ class EIQApi:
     def set_source(self, source):
         self.source = source
 
-
     def is_error(self, msg):
-        if 'errors' in msg.keys():
+        if 'errors' in msg:
             return True
         return False
 
-    """do_call(endpt, method, headers, data, decode_json)
-    performs call to self.host + endpt
-    this call automatically assumes Content-Type and Accept headers set to application/json
-    all headers passed as argument to this call are added to that (and are able to overwrite them)
-    """
-    def do_call(self, endpt, method, headers = None, data = None, decode_json = True):
+    def do_call(self, endpt, method, headers=None, data=None, decode_json=True):
+        """do_call(endpt, method, headers, data, decode_json)
+        performs call to self.host + endpt
+        this call automatically assumes Content-Type and Accept headers set to application/json
+        all headers passed as argument to this call are added to that (and are able to overwrite them)
+        """
         if not self.host:
             raise Exception('call set_host(host) before making calls')
 
         # set up HTTP headers
-        _headers = {}
-        _headers['Content-Type'] = 'application/json'
-        _headers['Accept'] = 'application/json'
+        _headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
         if headers:
-            for key in headers.keys():
+            for key in headers:
                 _headers[key] = headers[key]
 
         # prepare request
@@ -54,9 +54,9 @@ class EIQApi:
         # make connection
         if self.ssl:
             ssl_ctx = ssl.create_default_context()
-        if self.insecure:
-            ssl_ctx.check_hostname = False
-            ssl_ctx.verify_mode = ssl.CERT_NONE
+            if self.insecure:
+                ssl_ctx.check_hostname = False
+                ssl_ctx.verify_mode = ssl.CERT_NONE
             with urllib.request.urlopen(req, context=ssl_ctx) as f:
                 ret = f.read().decode('utf-8')
         else:
@@ -71,18 +71,18 @@ class EIQApi:
                 return None
         return ret
 
+    def do_auth(self):
         """ do_auth(username, password)
             calls to /auth endpoint
-      
+
             returns: [dict] {'token': '<token>', 'expires_at': '<timestamp>'}, or None on failed call
         """
-    def do_auth(self):
         if not self.username or not self.password:
             raise Exception('call set_credentials before do_auth')
         data = '{"username":"%s","password":"%s"}' % (self.username, self.password)
         data = data.encode()
         ret = self.do_call('/auth', 'POST', data=data)
-        if ret and 'token' in ret.keys() and 'expires_at' in ret.keys():
+        if ret and 'token' in ret and 'expires_at' in ret:
             return ret
         return None
 
@@ -90,11 +90,12 @@ class EIQApi:
         return self.__get_entity(u, t)
 
     def __get_entity(self, uuid_string, token):
-        headers = {}
-        headers['User-Agent'] = 'eiqlib/1.0'
-        headers['Authorization'] = 'Bearer %s' % (token['token'],)
-        headers['Cookie'] = 'platform-api-token=%s' % (token['token'],)
-    
+        headers = {
+            'User-Agent': 'eiqlib/1.0',
+            'Authorization': 'Bearer %s' % token['token'],
+            'Cookie': 'platform-api-token=%s' % token['token'],
+        }
+
         # make call
         try:
             ret = self.do_call('/entities/%s' % (uuid_string,), 'GET', headers=headers)
@@ -110,15 +111,15 @@ class EIQApi:
         s = hashlib.md5(s).hexdigest()
         return s[:8] + '-' + s[8:12] + '-' + s[12:16] + '-' + s[16:20] + '-' + s[20:]
 
-    """ __get_latest_version_id(self, update_identifier, token)
-            a deterministic way to figure out which random-seeming internal EIQ id
-            matches "update_identifier"
-
-            returns: ([str] uuid_prev, [str] uuid_this)
-              uuid_prev: uuid of the entity to update (or None if none exist)
-              uuid_this: uuid to use for this entity
-    """
     def get_latest_version_id(self, u, t):
+        """ __get_latest_version_id(self, update_identifier, token)
+                a deterministic way to figure out which random-seeming internal EIQ id
+                matches "update_identifier"
+
+                returns: ([str] uuid_prev, [str] uuid_this)
+                  uuid_prev: uuid of the entity to update (or None if none exist)
+                  uuid_this: uuid to use for this entity
+        """
         return self.__get_latest_version_id(u, t)
 
     def __get_latest_version_id(self, update_identifier, token):
@@ -144,17 +145,18 @@ class EIQApi:
     def __get_entity_tags(self, uuid_string, token):
         entity = self.__get_entity(uuid_string, token)
         taxonomies = []
-        if entity and 'data' in entity.keys() and 'meta' in entity['data'].keys() and 'taxonomy' in entity['data']['meta'].keys():
+        if entity and 'data' in entity and 'meta' in entity['data'] and \
+                'taxonomy' in entity['data']['meta']:
             for taxonomy in entity['data']['meta']['taxonomy']:
                 taxonomies.append(taxonomy)
         return taxonomies
 
-    """ create_entity(entity_json)
-            calls to /entities/ endpoint
-            entity_json: [str] currently formatted request body in EIQ-json for new entity
-            returns: [python object] parsed json response from api
-    """
     def create_entity(self, entity_json, update_identifier=None, token=None):
+        """ create_entity(entity_json)
+                calls to /entities/ endpoint
+                entity_json: [str] currently formatted request body in EIQ-json for new entity
+                returns: [python object] parsed json response from api
+        """
         # auth token
         if not token:
             token = self.do_auth()
@@ -176,15 +178,16 @@ class EIQApi:
             entity_json['data']['meta']['taxonomy'] = tags
             entity_type = entity_json['data']['data']['type']
             entity_json = json.dumps(entity_json)
-          
+
             # if there was a previous version, we need to let update_entity handle the entire creation process
             # otherwise, let the rest of create_entity handle the call
             if prev_id:
                 return self.update_entity(entity_json, prev_id, entity_type, token=token)
 
-        headers = {}
-        headers['Authorization'] = 'Bearer %s' % (token['token'],)
-        headers['Cookie'] = 'platform-api-token=%s' % (token['token'],)
+        headers = {
+            'Authorization': 'Bearer %s' % token['token'],
+            'Cookie': 'platform-api-token=%s' % token['token'],
+        }
 
         if isinstance(entity_json, str):
             entity_json = entity_json.encode()
@@ -196,6 +199,7 @@ class EIQApi:
         else:
             return None
 
+    def update_entity(self, updated_entity_json, old_entity_id, old_entity_type, token=None):
         """ update_entity(updated_entity_json, old_entity_id)
             this method makes 2 calls to the /entities/ endpoint
             1) create a "new" entity with all updated information when compared to the old one
@@ -205,15 +209,15 @@ class EIQApi:
             old_entity_type: [str] type of the old entity
             returns: [python object] error python message or None on failure, create_entity object of the new entity on success
         """
-    def update_entity(self, updated_entity_json, old_entity_id, old_entity_type, token=None):
         # auth token
         if not token:
             token = self.do_auth()
             if not token:
                 raise Exception('update_entity was unable to authenticate')
-        headers = {}
-        headers['Authorization'] = 'Bearer %s' % (token['token'],)
-        headers['Cookie'] = 'platform-api-token=%s' % (token['token'],)
+        headers = {
+            'Authorization': 'Bearer %s' % token['token'],
+            'Cookie': 'platform-api-token=%s' % token['token'],
+        }
 
         # make call to create updated entity
         ret = self.create_entity(updated_entity_json, token=token)
@@ -224,7 +228,8 @@ class EIQApi:
         entity_ret = ret
 
         # updated entity created, now make it the successor of the old entity
-        if 'data' in ret and 'data' in ret['data'] and 'type' in ret['data']['data'] and 'sources' in ret['data'] and len(ret['data']['sources']) > 0:
+        if 'data' in ret and 'data' in ret['data'] and 'type' in ret['data']['data'] \
+                and 'sources' in ret['data'] and len(ret['data']['sources']) > 0:
             source_id = ret['data']['id']
             source_type = ret['data']['data']['type']
             meta_source = ret['data']['sources'][-1]['source_id']
@@ -243,6 +248,3 @@ class EIQApi:
             return ret
         # on success, return the original create_entity result
         return entity_ret
-
-if __name__ == '__main__':
-    pass

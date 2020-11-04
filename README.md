@@ -96,4 +96,3 @@ token = api.do_auth()
 # will update the latest version already in EIQ
 response = api.create_entity(entity_json, token=token, update_identifier="Event-000")
 ```
-
