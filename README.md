@@ -8,7 +8,7 @@ only compatible with EclecticIQ 2.2
 ### dependencies
 - python3
 - standard python3 libraries (json, time, uuid, urllib.request)
-- EclecticIQ 2.2 (as server for the API to communicate with)
+- EclecticIQ Platform 2.2 or higher (currently tested with at least 2.8.x)
 
 ### example usage of eiqjson.EIQEntity
 
